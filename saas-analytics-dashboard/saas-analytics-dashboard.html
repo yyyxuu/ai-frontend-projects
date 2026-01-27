@@ -70,7 +70,9 @@
             border-radius: 8px;
             padding: 3px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .lang-switch:hover {
@@ -83,19 +85,43 @@
             border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             color: #64748B;
+            position: relative;
+            z-index: 2;
         }
 
         .lang-option.active {
-            background: #1E40AF;
+            background: transparent;
             color: white;
-            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
         }
 
         .lang-option:not(.active):hover {
-            background: #F1F5F9;
             color: #1E40AF;
+            transform: scale(1.05);
+        }
+
+        /* Sliding background */
+        .lang-switch::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: calc(50% - 2px);
+            height: calc(100% - 6px);
+            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+            border-radius: 6px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .lang-switch[data-lang="zh"]::before {
+            transform: translateX(0);
+        }
+
+        .lang-switch[data-lang="en"]::before {
+            transform: translateX(calc(100% + 2px));
         }
 
         /* Animated Background */
@@ -144,6 +170,28 @@
             50% { opacity: 0.7; }
         }
 
+        @keyframes textSwitchOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+        }
+
+        @keyframes textSwitchIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .animate-draw {
             stroke-dasharray: 1000;
             animation: drawLine 3s ease-out forwards;
@@ -155,6 +203,15 @@
 
         .animate-pulse-soft {
             animation: pulse-soft 2s ease-in-out infinite;
+        }
+
+        /* Text transition for language switching */
+        .lang-transition-out {
+            animation: textSwitchOut 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .lang-transition-in {
+            animation: textSwitchIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         /* Reduced Motion */
@@ -223,7 +280,7 @@
                     </a>
 
                     <!-- Language Switcher -->
-                    <div class="lang-switch" onclick="toggleLanguage()" role="button" aria-label="Switch language">
+                    <div class="lang-switch" data-lang="zh" onclick="toggleLanguage()" role="button" aria-label="Switch language">
                         <span class="lang-option active" id="lang-zh">中文</span>
                         <span class="lang-option" id="lang-en">EN</span>
                     </div>
@@ -1172,25 +1229,44 @@
             // Update language switcher appearance
             document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
             document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+            document.querySelector('.lang-switch').setAttribute('data-lang', lang);
 
-            // Update page title
-            document.title = lang === 'zh'
-                ? 'DataFlow Pro - 实时数据分析仪表板'
-                : 'DataFlow Pro - Real-time Analytics Dashboard';
+            // Update page title with delay for smooth transition
+            setTimeout(() => {
+                document.title = lang === 'zh'
+                    ? 'DataFlow Pro - 实时数据分析仪表板'
+                    : 'DataFlow Pro - Real-time Analytics Dashboard';
 
-            // Update meta description
-            const metaDesc = document.querySelector('meta[name="description"]');
-            if (metaDesc) {
-                metaDesc.content = lang === 'zh'
-                    ? '使用 DataFlow Pro 将您的数据转化为可操作的洞察。实时分析、精美的可视化和强大的报告功能。'
-                    : 'Transform your data into actionable insights with DataFlow Pro. Real-time analytics, beautiful visualizations, and powerful reporting.';
-            }
+                // Update meta description
+                const metaDesc = document.querySelector('meta[name="description"]');
+                if (metaDesc) {
+                    metaDesc.content = lang === 'zh'
+                        ? '使用 DataFlow Pro 将您的数据转化为可操作的洞察。实时分析、精美的可视化和强大的报告功能。'
+                        : 'Transform your data into actionable insights with DataFlow Pro. Real-time analytics, beautiful visualizations, and powerful reporting.';
+                }
+            }, 200);
 
             // Update all elements with data-lang attribute
             document.querySelectorAll('[data-lang]').forEach(el => {
                 const key = el.getAttribute('data-lang');
                 if (t[key]) {
-                    el.textContent = t[key];
+                    // Skip if text hasn't changed
+                    if (el.textContent === t[key]) return;
+
+                    // Add transition out animation
+                    el.classList.add('lang-transition-out');
+
+                    // After transition out, update text and transition in
+                    setTimeout(() => {
+                        el.textContent = t[key];
+                        el.classList.remove('lang-transition-out');
+                        el.classList.add('lang-transition-in');
+
+                        // Remove transition in class after animation completes
+                        setTimeout(() => {
+                            el.classList.remove('lang-transition-in');
+                        }, 300);
+                    }, 200);
                 }
             });
 
@@ -1299,7 +1375,23 @@
         function updateElement(selector, text) {
             const elements = document.querySelectorAll(selector);
             elements.forEach(el => {
-                el.textContent = text;
+                // Skip if text hasn't changed
+                if (el.textContent === text) return;
+
+                // Add transition out animation
+                el.classList.add('lang-transition-out');
+
+                // After transition out, update text and transition in
+                setTimeout(() => {
+                    el.textContent = text;
+                    el.classList.remove('lang-transition-out');
+                    el.classList.add('lang-transition-in');
+
+                    // Remove transition in class after animation completes
+                    setTimeout(() => {
+                        el.classList.remove('lang-transition-in');
+                    }, 300);
+                }, 200);
             });
         }
 
