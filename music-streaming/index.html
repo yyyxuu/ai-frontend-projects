@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MusicFlow - 沉浸式音乐流媒体</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Righteous&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1E1B4B;
+      --secondary: #4338CA;
+      --cta: #22C55E;
+      --background: #0F0F23;
+      --text: #F8FAFC;
+    }
+
+    * {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    h1, h2, h3, .font-heading {
+      font-family: 'Righteous', cursive;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(135deg, #0F0F23 0%, #1E1B4B 50%, #4338CA 100%);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glow-green {
+      box-shadow: 0 0 40px rgba(34, 197, 94, 0.4);
+    }
+
+    .playlist-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 20px 40px rgba(67, 56, 202, 0.4);
+    }
+
+    .artist-card:hover .artist-overlay {
+      opacity: 1;
+    }
+
+    .album-art {
+      background: linear-gradient(45deg, #FF6B6B, #4ECDC4, #45B7D1, #FFA07A);
+      background-size: 400% 400%;
+      animation: gradientShift 8s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .pulse-animation::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: #22C55E;
+      animation: pulse-ring 2s ease-out infinite;
+      z-index: -1;
+    }
+
+    .scroll-container {
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .scroll-item {
+      scroll-snap-align: start;
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, #22C55E, #4ECDC4);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#0F0F23] text-[#F8FAFC] min-h-screen">
+  <!-- Floating Navigation -->
+  <nav class="fixed top-4 left-4 right-4 z-50 glass-card rounded-2xl px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <svg class="w-8 h-8 text-[#22C55E]" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+        <span class="font-heading text-xl">MusicFlow</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#featured" class="hover:text-[#22C55E] transition-colors duration-200 cursor-pointer">精选</a>
+        <a href="#playlists" class="hover:text-[#22C55E] transition-colors duration-200 cursor-pointer">歌单</a>
+        <a href="#artists" class="hover:text-[#22C55E] transition-colors duration-200 cursor-pointer">艺人</a>
+        <a href="#premium" class="hover:text-[#22C55E] transition-colors duration-200 cursor-pointer">会员</a>
+      </div>
+      <button class="bg-[#22C55E] hover:bg-[#16A34A] px-6 py-2 rounded-full font-semibold transition-all duration-200 cursor-pointer">
+        免费试用
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="gradient-bg min-h-screen flex items-center justify-center pt-32 pb-20 px-4 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-20">
+      <div class="absolute top-20 left-10 w-72 h-72 bg-[#4338CA] rounded-full filter blur-3xl"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-[#22C55E] rounded-full filter blur-3xl"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto text-center relative z-10">
+      <h1 class="text-5xl md:text-7xl lg:text-8xl mb-6 leading-tight">
+        感受<br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#22C55E] to-[#4ECDC4]">音乐的力量</span>
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto">
+        超过 1 亿首歌曲，无损音质，个性化推荐<br>
+        随时随地，享受你的专属音乐体验
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button class="bg-[#22C55E] hover:bg-[#16A34A] px-10 py-4 rounded-full font-bold text-lg transition-all duration-200 cursor-pointer glow-green">
+          立即开始免费试用
+        </button>
+        <button class="glass-card hover:bg-white/10 px-10 py-4 rounded-full font-semibold text-lg transition-all duration-200 cursor-pointer">
+          了解更多
+        </button>
+      </div>
+
+      <!-- Hero Album Art -->
+      <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        <div class="album-art aspect-square rounded-2xl"></div>
+        <div class="bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A] aspect-square rounded-2xl"></div>
+        <div class="bg-gradient-to-br from-[#4ECDC4] to-[#45B7D1] aspect-square rounded-2xl"></div>
+        <div class="bg-gradient-to-br from-[#4338CA] to-[#6366F1] aspect-square rounded-2xl"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Audio Player Preview -->
+  <section id="featured" class="py-20 px-4 bg-[#1E1B4B]">
+    <div class="max-w-6xl mx-auto">
+      <div class="glass-card rounded-3xl p-8 md:p-12">
+        <div class="flex flex-col lg:flex-row gap-8 items-center">
+          <!-- Album Cover -->
+          <div class="w-full lg:w-1/3">
+            <div class="album-art aspect-square rounded-2xl shadow-2xl"></div>
+          </div>
+
+          <!-- Player Controls -->
+          <div class="w-full lg:w-2/3">
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h3 class="text-2xl font-heading mb-2">夜空中最亮的星</h3>
+                <p class="text-gray-400">逃跑计划 • 世界</p>
+              </div>
+              <button class="text-gray-400 hover:text-white transition-colors cursor-pointer">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-6">
+              <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div class="progress-bar h-full w-1/3 rounded-full"></div>
+              </div>
+              <div class="flex justify-between text-sm text-gray-400 mt-2">
+                <span>1:24</span>
+                <span>4:12</span>
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center justify-center gap-6">
+              <button class="text-gray-400 hover:text-white transition-colors cursor-pointer">
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                </svg>
+              </button>
+              <button class="relative pulse-animation w-16 h-16 bg-[#22C55E] rounded-full flex items-center justify-center hover:scale-105 transition-transform cursor-pointer">
+                <svg class="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+              <button class="text-gray-400 hover:text-white transition-colors cursor-pointer">
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Quality Badge -->
+            <div class="flex items-center gap-4 mt-8">
+              <span class="glass-card px-3 py-1 rounded-full text-sm">无损音质</span>
+              <span class="glass-card px-3 py-1 rounded-full text-sm">Hi-Res</span>
+              <span class="glass-card px-3 py-1 rounded-full text-sm">空间音频</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Playlist Showcase -->
+  <section id="playlists" class="py-20 px-4">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="text-4xl md:text-5xl font-heading mb-4">精选歌单</h2>
+      <p class="text-gray-400 text-lg mb-12">为你精心挑选的每日推荐</p>
+
+      <div class="scroll-container flex gap-6 overflow-x-auto pb-6">
+        <!-- Playlist Card 1 -->
+        <div class="playlist-card scroll-item flex-shrink-0 w-72 glass-card rounded-2xl p-4 cursor-pointer transition-all duration-300">
+          <div class="aspect-square bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A] rounded-xl mb-4"></div>
+          <h3 class="font-heading text-xl mb-1">华语流行</h3>
+          <p class="text-gray-400 text-sm">最新热门单曲</p>
+        </div>
+
+        <!-- Playlist Card 2 -->
+        <div class="playlist-card scroll-item flex-shrink-0 w-72 glass-card rounded-2xl p-4 cursor-pointer transition-all duration-300">
+          <div class="aspect-square bg-gradient-to-br from-[#4ECDC4] to-[#45B7D1] rounded-xl mb-4"></div>
+          <h3 class="font-heading text-xl mb-1">电子音乐</h3>
+          <p class="text-gray-400 text-sm">节奏感十足</p>
+        </div>
+
+        <!-- Playlist Card 3 -->
+        <div class="playlist-card scroll-item flex-shrink-0 w-72 glass-card rounded-2xl p-4 cursor-pointer transition-all duration-300">
+          <div class="aspect-square bg-gradient-to-br from-[#4338CA] to-[#6366F1] rounded-xl mb-4"></div>
+          <h3 class="font-heading text-xl mb-1">摇滚经典</h3>
+          <p class="text-gray-400 text-sm">永恒的传奇</p>
+        </div>
+
+        <!-- Playlist Card 4 -->
+        <div class="playlist-card scroll-item flex-shrink-0 w-72 glass-card rounded-2xl p-4 cursor-pointer transition-all duration-300">
+          <div class="aspect-square bg-gradient-to-br from-[#22C55E] to-[#4ADE80] rounded-xl mb-4"></div>
+          <h3 class="font-heading text-xl mb-1">轻松时光</h3>
+          <p class="text-gray-400 text-sm">放松心情</p>
+        </div>
+
+        <!-- Playlist Card 5 -->
+        <div class="playlist-card scroll-item flex-shrink-0 w-72 glass-card rounded-2xl p-4 cursor-pointer transition-all duration-300">
+          <div class="aspect-square bg-gradient-to-br from-[#F59E0B] to-[#FB923C] rounded-xl mb-4"></div>
+          <h3 class="font-heading text-xl mb-1">深夜爵士</h3>
+          <p class="text-gray-400 text-sm">优雅与浪漫</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Artist Spotlight -->
+  <section id="artists" class="py-20 px-4 bg-[#1E1B4B]">
+    <div class="max-w-7xl mx-auto">
+      <h2 class="text-4xl md:text-5xl font-heading mb-4">艺人聚焦</h2>
+      <p class="text-gray-400 text-lg mb-12">发现你喜爱的艺术家</p>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <!-- Artist 1 -->
+        <div class="artist-card group relative cursor-pointer">
+          <div class="aspect-square bg-gradient-to-br from-[#FF6B6B] to-[#FFA07A] rounded-full mb-4"></div>
+          <h3 class="font-heading text-lg text-center">周杰伦</h3>
+          <p class="text-gray-400 text-sm text-center">华语流行</p>
+          <div class="artist-overlay absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">
+            <button class="bg-[#22C55E] w-12 h-12 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 ml-1" fill="white" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Artist 2 -->
+        <div class="artist-card group relative cursor-pointer">
+          <div class="aspect-square bg-gradient-to-br from-[#4ECDC4] to-[#45B7D1] rounded-full mb-4"></div>
+          <h3 class="font-heading text-lg text-center">邓紫棋</h3>
+          <p class="text-gray-400 text-sm text-center">流行摇滚</p>
+          <div class="artist-overlay absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">
+            <button class="bg-[#22C55E] w-12 h-12 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 ml-1" fill="white" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Artist 3 -->
+        <div class="artist-card group relative cursor-pointer">
+          <div class="aspect-square bg-gradient-to-br from-[#4338CA] to-[#6366F1] rounded-full mb-4"></div>
+          <h3 class="font-heading text-lg text-center">林俊杰</h3>
+          <p class="text-gray-400 text-sm text-center">R&B</p>
+          <div class="artist-overlay absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">
+            <button class="bg-[#22C55E] w-12 h-12 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 ml-1" fill="white" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Artist 4 -->
+        <div class="artist-card group relative cursor-pointer">
+          <div class="aspect-square bg-gradient-to-br from-[#22C55E] to-[#4ADE80] rounded-full mb-4"></div>
+          <h3 class="font-heading text-lg text-center">蔡依林</h3>
+          <p class="text-gray-400 text-sm text-center">舞曲流行</p>
+          <div class="artist-overlay absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 transition-opacity duration-300">
+            <button class="bg-[#22C55E] w-12 h-12 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 ml-1" fill="white" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Premium CTA Section -->
+  <section id="premium" class="py-20 px-4">
+    <div class="max-w-6xl mx-auto">
+      <div class="gradient-bg rounded-3xl p-12 md:p-16 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+          <div class="absolute top-0 right-0 w-96 h-96 bg-[#22C55E] rounded-full filter blur-3xl"></div>
+          <div class="absolute bottom-0 left-0 w-72 h-72 bg-[#4338CA] rounded-full filter blur-3xl"></div>
+        </div>
+
+        <div class="relative z-10 text-center">
+          <span class="glass-card px-4 py-2 rounded-full text-sm mb-6 inline-block">限时优惠</span>
+          <h2 class="text-4xl md:text-6xl font-heading mb-6">
+            升级到<br><span class="text-[#22C55E]">MusicFlow Premium</span>
+          </h2>
+          <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            解锁无损音质、离线收听、无广告体验<br>
+            首月仅需 ¥9.9
+          </p>
+
+          <!-- Features Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="glass-card p-6 rounded-2xl">
+              <svg class="w-10 h-10 text-[#22C55E] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+              </svg>
+              <h3 class="font-heading text-lg mb-2">无损音质</h3>
+              <p class="text-gray-400 text-sm">FLAC 格式，还原录音室级别音质</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl">
+              <svg class="w-10 h-10 text-[#22C55E] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <h3 class="font-heading text-lg mb-2">离线收听</h3>
+              <p class="text-gray-400 text-sm">下载歌曲，随时随地畅听无阻</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl">
+              <svg class="w-10 h-10 text-[#22C55E] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+              </svg>
+              <h3 class="font-heading text-lg mb-2">无广告</h3>
+              <p class="text-gray-400 text-sm">纯净音乐体验，不受任何干扰</p>
+            </div>
+          </div>
+
+          <button class="bg-[#22C55E] hover:bg-[#16A34A] px-12 py-5 rounded-full font-bold text-xl transition-all duration-200 cursor-pointer glow-green">
+            立即订阅 Premium
+          </button>
+
+          <p class="text-gray-400 text-sm mt-6">随时取消 • 30 天退款保证</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-4 border-t border-white/10">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h4 class="font-heading mb-4">公司</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">关于我们</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">加入我们</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">媒体报道</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-heading mb-4">社区</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">艺人入驻</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">开发者</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">合作伙伴</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-heading mb-4">支持</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">帮助中心</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">联系我们</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">反馈建议</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-heading mb-4">法律</h4>
+          <ul class="space-y-2 text-gray-400">
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">使用条款</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">隐私政策</a></li>
+            <li><a href="#" class="hover:text-[#22C55E] transition-colors cursor-pointer">版权声明</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-white/10">
+        <div class="flex items-center gap-2 mb-4 md:mb-0">
+          <svg class="w-6 h-6 text-[#22C55E]" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+          </svg>
+          <span class="font-heading">MusicFlow</span>
+        </div>
+        <p class="text-gray-400 text-sm">© 2025 MusicFlow. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Add scroll-based navbar background
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 100) {
+        nav.style.background = 'rgba(15, 15, 35, 0.95)';
+      } else {
+        nav.style.background = 'rgba(255, 255, 255, 0.05)';
+      }
+    });
+  </script>
+</body>
+</html>
