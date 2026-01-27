@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataFlow Pro - 实时数据分析仪表板</title>
+    <meta name="description" content="使用 DataFlow Pro 将您的数据转化为可操作的洞察。实时分析、精美的可视化和强大的报告功能。">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fira Sans', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: '#1E40AF',
+                            light: '#3B82F6',
+                            dark: '#1E3A8A',
+                        },
+                        secondary: '#3B82F6',
+                        accent: '#F59E0B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Glassmorphism Effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(30, 64, 175, 0.1);
+        }
+
+        .glass-card-dark {
+            background: rgba(30, 64, 175, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        /* Language Switcher */
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(30, 64, 175, 0.2);
+            border-radius: 8px;
+            padding: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lang-switch:hover {
+            border-color: rgba(30, 64, 175, 0.4);
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.1);
+        }
+
+        .lang-option {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            color: #64748B;
+        }
+
+        .lang-option.active {
+            background: #1E40AF;
+            color: white;
+            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+        }
+
+        .lang-option:not(.active):hover {
+            background: #F1F5F9;
+            color: #1E40AF;
+        }
+
+        /* Animated Background */
+        .hero-bg {
+            background: linear-gradient(135deg, #F8FAFC 0%, #DBEAFE 50%, #BFDBFE 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-20px, 20px) rotate(240deg); }
+        }
+
+        /* Chart Animation */
+        @keyframes drawLine {
+            from { stroke-dashoffset: 1000; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .animate-draw {
+            stroke-dasharray: 1000;
+            animation: drawLine 3s ease-out forwards;
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .animate-pulse-soft {
+            animation: pulse-soft 2s ease-in-out infinite;
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-900 antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-4 left-4 right-4 z-50 glass rounded-2xl shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+                    <svg class="size-8 text-primary" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18 17V9"/>
+                        <path d="M13 17V5"/>
+                        <path d="M8 17v-3"/>
+                    </svg>
+                    <span class="font-bold text-xl text-primary-dark">DataFlow Pro</span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#features" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium nav-features">功能特点</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium nav-pricing">价格方案</a>
+                    <a href="#testimonials" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium nav-testimonials">用户评价</a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium nav-documentation">文档</a>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="flex items-center gap-3">
+                    <a href="#" class="hidden sm:block text-gray-700 hover:text-primary transition-colors duration-200 font-medium" data-lang="signIn">登录</a>
+                    <a href="#" class="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg focus:ring-2 focus:ring-primary focus:ring-offset-2" data-lang="getStarted">
+                        免费开始
+                    </a>
+
+                    <!-- Language Switcher -->
+                    <div class="lang-switch" onclick="toggleLanguage()" role="button" aria-label="Switch language">
+                        <span class="lang-option active" id="lang-zh">中文</span>
+                        <span class="lang-option" id="lang-en">EN</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-bg min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 py-24">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="text-center lg:text-left grid lg:grid-cols-2 gap-16 items-center">
+                <!-- Left: Hero Content -->
+                <div class="animate-fade-in">
+                    <div class="inline-flex items-center gap-2 bg-blue-100 text-primary-dark px-5 py-2.5 rounded-full text-base font-semibold mb-8">
+                        <svg class="size-5" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <span class="hero-badge">实时分析平台</span>
+                    </div>
+
+                    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold text-primary-dark leading-tight mb-8">
+                        <span class="hero-title">将数据转化为</span>
+                        <span class="hero-highlight text-primary block mt-2">可操作的洞察</span>
+                    </h1>
+
+                    <p class="hero-desc text-xl sm:text-2xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                        通过精美的仪表板、实时可视化和AI驱动的分析，释放数据的力量。更快地做出更明智的决策。
+                    </p>
+
+                    <div class="flex flex-col sm:flex-row gap-5 mb-14 justify-center lg:justify-start">
+                        <a href="#" class="hero-cta1 inline-flex items-center justify-center gap-3 bg-primary hover:bg-primary-dark text-white px-10 py-5 rounded-xl font-bold text-xl transition-all duration-200 hover:shadow-xl focus:ring-4 focus:ring-primary focus:ring-offset-2">
+                            <span>开始免费试用</span>
+                            <svg class="size-6" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14"/>
+                                <path d="m12 5 7 7-7 7"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="hero-cta2 inline-flex items-center justify-center gap-3 glass-card hover:bg-white text-gray-800 px-10 py-5 rounded-xl font-bold text-xl transition-all duration-200 hover:shadow-lg focus:ring-4 focus:ring-primary focus:ring-offset-2">
+                            <svg class="size-6 text-primary" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            <span>观看演示</span>
+                        </a>
+                    </div>
+
+                    <!-- Trust Badges -->
+                    <div class="flex items-center gap-8 flex-wrap justify-center lg:justify-start">
+                        <div class="flex items-center gap-3">
+                            <div class="flex -space-x-3">
+                                <div class="size-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-3 border-white"></div>
+                                <div class="size-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-3 border-white"></div>
+                                <div class="size-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-3 border-white"></div>
+                                <div class="size-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-3 border-white"></div>
+                            </div>
+                            <span class="text-base text-gray-600"><strong class="font-bold text-gray-900 text-lg">10,000+</strong> <span class="trust-badges">团队</span></span>
+                        </div>
+                        <div class="h-8 w-px bg-gray-300"></div>
+                        <div class="flex items-center gap-2">
+                            <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <span class="text-base text-gray-600"><strong class="font-bold text-gray-900 text-lg">4.9/5</strong> <span class="rating">评分</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Dashboard Preview -->
+                <div class="relative animate-fade-in" style="animation-delay: 0.2s">
+                    <div class="glass-card rounded-3xl p-8 shadow-2xl scale-110">
+                        <!-- Dashboard Header -->
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="size-4 rounded-full bg-red-400"></div>
+                                <div class="size-4 rounded-full bg-yellow-400"></div>
+                                <div class="size-4 rounded-full bg-green-400"></div>
+                            </div>
+                            <span class="text-sm text-gray-500 font-mono font-semibold live-dashboard">实时仪表板</span>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 gap-6 mb-8">
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <svg class="size-7 text-primary" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                    </svg>
+                                    <span class="text-base text-gray-600 font-medium revenue">收入</span>
+                                </div>
+                                <p class="text-4xl font-bold text-primary-dark">$84,230</p>
+                                <p class="revenue-growth text-sm text-green-600 font-bold">↑ 12.5% 较上月</p>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <svg class="size-7 text-purple-600" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                    <span class="text-base text-gray-600 font-medium users">用户</span>
+                                </div>
+                                <p class="text-4xl font-bold text-purple-700">12,847</p>
+                                <p class="users-growth text-sm text-green-600 font-bold">↑ 8.2% 较上月</p>
+                            </div>
+                        </div>
+
+                        <!-- Chart Area -->
+                        <div class="bg-white rounded-2xl p-6 border border-gray-200">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-xl font-bold text-gray-800 traffic-overview">流量概览</h3>
+                                <div class="flex items-center gap-3">
+                                    <span class="inline-flex items-center gap-2 text-sm text-gray-600 font-medium">
+                                        <span class="size-3 rounded-full bg-primary"></span>
+                                        <span class="organic">自然流量</span>
+                                    </span>
+                                    <span class="inline-flex items-center gap-2 text-sm text-gray-600 font-medium">
+                                        <span class="size-3 rounded-full bg-accent"></span>
+                                        <span class="paid">付费流量</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- SVG Chart -->
+                            <svg class="w-full h-48" viewBox="0 0 400 150" preserveAspectRatio="none">
+                                <!-- Grid Lines -->
+                                <line x1="0" y1="0" x2="400" y2="0" stroke="#E2E8F0" stroke-width="2"/>
+                                <line x1="0" y1="37.5" x2="400" y2="37.5" stroke="#E2E8F0" stroke-width="2"/>
+                                <line x1="0" y1="75" x2="400" y2="75" stroke="#E2E8F0" stroke-width="2"/>
+                                <line x1="0" y1="112.5" x2="400" y2="112.5" stroke="#E2E8F0" stroke-width="2"/>
+                                <line x1="0" y1="150" x2="400" y2="150" stroke="#E2E8F0" stroke-width="2"/>
+
+                                <!-- Data Line 1 (Primary) -->
+                                <path d="M0,105 Q50,60 100,75 T200,45 T300,67.5 T400,30"
+                                      fill="none"
+                                      stroke="#1E40AF"
+                                      stroke-width="4"
+                                      stroke-linecap="round"
+                                      class="animate-draw"/>
+
+                                <!-- Data Line 2 (Accent) -->
+                                <path d="M0,120 Q50,90 100,97.5 T200,75 T300,82.5 T400,60"
+                                      fill="none"
+                                      stroke="#F59E0B"
+                                      stroke-width="3"
+                                      stroke-linecap="round"
+                                      stroke-dasharray="8,8"
+                                      class="animate-draw"
+                                      style="animation-delay: 0.5s"/>
+                            </svg>
+
+                            <!-- Live Indicator -->
+                            <div class="flex items-center justify-center gap-3 mt-6">
+                                <span class="relative flex h-4 w-4">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500"></span>
+                                </span>
+                                <span class="text-sm text-gray-500 font-medium updating">实时更新中</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Cards -->
+                    <div class="absolute -top-6 -right-6 glass-card rounded-2xl p-6 shadow-xl animate-fade-in" style="animation-delay: 0.4s">
+                        <div class="flex items-center gap-4">
+                            <div class="size-14 rounded-full bg-green-100 flex items-center justify-center">
+                                <svg class="size-7 text-green-600" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold text-gray-800 goal-reached">目标达成！</p>
+                                <p class="text-sm text-gray-500 font-medium">+127% <span class="increase">增长</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trusted By Section -->
+    <section class="py-20 bg-white border-y border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-base text-gray-500 font-bold mb-10 tracking-wide trusted-by">全球领先企业信赖之选</p>
+            <div class="flex flex-wrap items-center justify-center gap-12 md:gap-20 opacity-60">
+                <div class="flex items-center gap-3 text-gray-400 font-bold text-2xl">
+                    <svg class="size-10" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Stripe
+                </div>
+                <div class="flex items-center gap-3 text-gray-400 font-bold text-2xl">
+                    <svg class="size-10" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    Slack
+                </div>
+                <div class="flex items-center gap-3 text-gray-400 font-bold text-2xl">
+                    <svg class="size-10" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="2" y="2" width="20" height="20" rx="4"/>
+                    </svg>
+                    Notion
+                </div>
+                <div class="flex items-center gap-3 text-gray-400 font-bold text-2xl">
+                    <svg class="size-10" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/>
+                    </svg>
+                    Figma
+                </div>
+                <div class="flex items-center gap-3 text-gray-400 font-bold text-2xl">
+                    <svg class="size-10" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 22h20L12 2z"/>
+                    </svg>
+                    Vercel
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-blue-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-dark mb-6 features-title">
+                    您成功所需的一切
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed features-desc">
+                    强大的功能设计，帮助您充满信心地理解、分析并基于数据采取行动。
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Feature 1 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8 cursor-pointer group">
+                    <div class="size-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+                        <svg class="size-8 text-white" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 feature1-title">实时分析</h3>
+                    <p class="text-lg text-gray-600 leading-relaxed feature1-desc">通过实时数据流和所有仪表板的即时更新，实时监控您的指标。</p>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8 cursor-pointer group">
+                    <div class="size-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+                        <svg class="size-8 text-white" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 feature2-title">AI驱动的洞察</h3>
+                    <p class="text-lg text-gray-600 leading-relaxed feature2-desc">让我们的智能算法发现隐藏模式，并在趋势发生之前进行预测。</p>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8 cursor-pointer group">
+                    <div class="size-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+                        <svg class="size-8 text-white" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18"/>
+                            <path d="M9 21V9"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 feature3-title">自定义仪表板</h3>
+                    <p class="text-lg text-gray-600 leading-relaxed feature3-desc">使用我们的拖放式构建器创建精美的可视化效果。无需编码。</p>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8 cursor-pointer group">
+                    <div class="size-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+                        <svg class="size-8 text-white" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 feature4-title">自动化报告</h3>
+                    <p class="text-lg text-gray-600 leading-relaxed feature4-desc">安排精美的PDF和Excel报告自动发送到您的收件箱。</p>
+                </div>
+
+                <!-- Feature 5 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8 cursor-pointer group">
+                    <div class="size-16 rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+                        <svg class="size-8 text-white" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 feature5-title">企业级安全</h3>
+                    <p class="text-lg text-gray-600 leading-relaxed feature5-desc">银行级加密、单点登录，符合SOC 2、GDPR和HIPAA标准。</p>
+                </div>
+
+                <!-- Feature 6 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8 cursor-pointer group">
+                    <div class="size-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-200">
+                        <svg class="size-8 text-white" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 feature6-title">200+ 集成</h3>
+                    <p class="text-lg text-gray-600 leading-relaxed feature6-desc">连接您喜爱的所有工具，包括Salesforce、HubSpot、Google Analytics等。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 to-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-dark mb-6 pricing-title">
+                    简单透明的价格
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed pricing-desc">
+                    选择适合您需求的计划。所有计划均包含14天免费试用。
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
+                <!-- Starter Plan -->
+                <div class="glass-card rounded-2xl p-10 hover:shadow-xl transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 plan-starter">入门版</h3>
+                    <p class="text-gray-600 text-base mb-8 plan-starter-desc">适合刚刚起步的小型团队</p>
+                    <div class="mb-8">
+                        <span class="text-5xl font-bold text-gray-900">$29</span>
+                        <span class="text-gray-600 text-xl per-month">/月</span>
+                    </div>
+                    <ul class="space-y-4 mb-10">
+                        <li class="flex items-center gap-3 text-lg text-gray-700 starter1">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            最多5名团队成员
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 starter2">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            10个仪表板
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 starter3">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            基础分析功能
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 starter4">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            邮件支持
+                        </li>
+                    </ul>
+                    <a href="#" class="block w-full text-center bg-white hover:bg-gray-50 text-primary border-2 border-primary font-bold py-4 rounded-xl transition-all duration-200 text-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 cta-get-started">
+                        开始使用
+                    </a>
+                </div>
+
+                <!-- Pro Plan (Popular) -->
+                <div class="glass-card-dark rounded-2xl p-10 shadow-2xl relative transform md:-translate-y-4">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-accent text-white text-base font-bold px-5 py-2 rounded-full most-popular">
+                        最受欢迎
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 plan-pro">专业版</h3>
+                    <p class="text-blue-100 text-base mb-8 plan-pro-desc">适合需要更多功能的成长型团队</p>
+                    <div class="mb-8">
+                        <span class="text-5xl font-bold text-white">$79</span>
+                        <span class="text-blue-100 text-xl per-month">/月</span>
+                    </div>
+                    <ul class="space-y-4 mb-10">
+                        <li class="flex items-center gap-3 text-lg text-white pro1">
+                            <svg class="size-6 text-accent shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            最多20名团队成员
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-white pro2">
+                            <svg class="size-6 text-accent shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            无限仪表板
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-white pro3">
+                            <svg class="size-6 text-accent shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            高级分析 + AI
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-white pro4">
+                            <svg class="size-6 text-accent shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            优先支持
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-white pro5">
+                            <svg class="size-6 text-accent shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            50+ 集成
+                        </li>
+                    </ul>
+                    <a href="#" class="block w-full text-center bg-accent hover:bg-amber-600 text-white font-bold py-4 rounded-xl transition-all duration-200 shadow-lg text-lg focus:ring-2 focus:ring-accent focus:ring-offset-2 cta-get-started">
+                        开始使用
+                    </a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="glass-card rounded-2xl p-10 hover:shadow-xl transition-all duration-300">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-3 plan-enterprise">企业版</h3>
+                    <p class="text-gray-600 text-base mb-8 plan-enterprise-desc">适合有定制需求的大型组织</p>
+                    <div class="mb-8">
+                        <span class="text-5xl font-bold text-gray-900 plan-custom">定制</span>
+                    </div>
+                    <ul class="space-y-4 mb-10">
+                        <li class="flex items-center gap-3 text-lg text-gray-700 enterprise1">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            无限团队成员
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 enterprise2">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            全方位定制
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 enterprise3">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            专属成功经理
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 enterprise4">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            24/7 电话支持
+                        </li>
+                        <li class="flex items-center gap-3 text-lg text-gray-700 enterprise5">
+                            <svg class="size-6 text-green-500 shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            SLA 保证
+                        </li>
+                    </ul>
+                    <a href="#" class="block w-full text-center bg-white hover:bg-gray-50 text-primary border-2 border-primary font-bold py-4 rounded-xl transition-all duration-200 text-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 cta-contact-sales">
+                        联系销售
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="py-24 px-4 sm:px-6 lg:px-8 bg-white">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="testimonials-title text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-dark mb-6">
+                    全球团队信赖之选
+                </h2>
+                <p class="testimonials-desc text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    了解客户对使用 DataFlow Pro 的体验有何评价。
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-10">
+                <!-- Testimonial 1 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8">
+                    <div class="flex items-center gap-1 mb-6">
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <p class="testimonial1 text-lg text-gray-700 mb-8 leading-relaxed">"DataFlow Pro 彻底改变了我们的决策方式。实时分析帮助我们在短短3个月内将转化率提高了40%。绝对颠覆性！"</p>
+                    <div class="flex items-center gap-4">
+                        <div class="size-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-xl">
+                            SK
+                        </div>
+                        <div>
+                            <p class="testimonial1-name font-bold text-gray-900 text-lg">金莎拉</p>
+                            <p class="testimonial1-role text-base text-gray-500">增长总监，科技公司</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8">
+                    <div class="flex items-center gap-1 mb-6">
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <p class="testimonial2 text-lg text-gray-700 mb-8 leading-relaxed">"AI驱动的洞察令人难以置信。就像团队中有一名数据科学家7x24小时待命。我们节省了无数时间，发现了从未知晓的机会。"</p>
+                    <div class="flex items-center gap-4">
+                        <div class="size-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-xl">
+                            MJ
+                        </div>
+                        <div>
+                            <p class="testimonial2-name font-bold text-gray-900 text-lg">迈克尔·约翰逊</p>
+                            <p class="testimonial2-role text-base text-gray-500">CEO，创业XYZ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="glass-card hover:shadow-xl transition-all duration-300 rounded-2xl p-8">
+                    <div class="flex items-center gap-1 mb-6">
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <svg class="size-6 text-accent" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <p class="testimonial3 text-lg text-gray-700 mb-8 leading-relaxed">"我们用过最好的分析平台。仪表板精美，集成功能完美运作，支持团队响应迅速。强烈推荐！"</p>
+                    <div class="flex items-center gap-4">
+                        <div class="size-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-xl">
+                            EC
+                        </div>
+                        <div>
+                            <p class="testimonial3-name font-bold text-gray-900 text-lg">陈艾米丽</p>
+                            <p class="testimonial3-role text-base text-gray-500">数据主管，企业公司</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary via-primary-dark to-primary text-white">
+        <div class="max-w-5xl mx-auto text-center">
+            <h2 class="cta-title text-4xl sm:text-5xl lg:text-6xl font-bold mb-8">
+                准备好转化您的数据了吗？
+            </h2>
+            <p class="cta-desc text-xl sm:text-2xl text-blue-100 mb-10 max-w-3xl mx-auto leading-relaxed">
+                加入 10,000+ 已使用 DataFlow Pro 做出更明智决策的团队。今天开始您的免费试用。
+            </p>
+            <div class="flex flex-col sm:flex-row gap-5 justify-center">
+                <a href="#" class="inline-flex items-center justify-center gap-3 bg-accent hover:bg-amber-600 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all duration-200 hover:shadow-xl focus:ring-4 focus:ring-accent focus:ring-offset-2 focus:ring-offset-primary">
+                    <span class="cta-button1">开始免费试用</span>
+                    <svg class="size-6" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14"/>
+                        <path d="m12 5 7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="inline-flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all duration-200 backdrop-blur-sm focus:ring-4 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary">
+                    <span class="cta-button2">预约演示</span>
+                </a>
+            </div>
+            <p class="cta-note text-base text-blue-200 mt-8 font-medium">无需信用卡 • 14天免费试用 • 随时取消</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="size-8 text-primary-light" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="M18 17V9"/>
+                            <path d="M13 17V5"/>
+                            <path d="M8 17v-3"/>
+                        </svg>
+                        <span class="font-bold text-xl">DataFlow Pro</span>
+                    </div>
+                    <p class="text-gray-400 text-sm footer-desc">通过实时分析和AI驱动的仪表板，将您的数据转化为可操作的洞察。</p>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4 footer-product">产品</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-features">功能特点</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-pricing">价格方案</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-integrations">集成</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-changelog">更新日志</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4 footer-company">公司</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-about">关于我们</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-blog">博客</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-careers">招聘</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-contact">联系我们</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4 footer-legal">法律</h4>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-privacy">隐私政策</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-terms">服务条款</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-cookie">Cookie政策</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors duration-200 footer-security">安全</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="footer-copyright text-sm text-gray-400">© 2025 DataFlow Pro. 版权所有。</p>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200" aria-label="Twitter">
+                        <svg class="size-5" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200" aria-label="GitHub">
+                        <svg class="size-5" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors duration-200" aria-label="LinkedIn">
+                        <svg class="size-5" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                            <rect x="2" y="9" width="4" height="12"/>
+                            <circle cx="4" cy="4" r="2"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Language Switching Script -->
+    <script>
+        // Translation dictionary
+        const translations = {
+            zh: {
+                // Navigation
+                signIn: '登录',
+                getStarted: '免费开始',
+                features: '功能特点',
+                pricing: '价格方案',
+                testimonials: '用户评价',
+                documentation: '文档',
+
+                // Hero Section
+                heroBadge: '实时分析平台',
+                heroTitle: '将数据转化为',
+                heroHighlight: '可操作的洞察',
+                heroDesc: '通过精美的仪表板、实时可视化和AI驱动的分析，释放数据的力量。更快地做出更明智的决策。',
+                heroCta1: '开始免费试用',
+                heroCta2: '观看演示',
+                trustBadges: '团队',
+                rating: '评分',
+
+                // Dashboard
+                liveDashboard: '实时仪表板',
+                revenue: '收入',
+                users: '用户',
+                trafficOverview: '流量概览',
+                organic: '自然流量',
+                paid: '付费流量',
+                updating: '实时更新中',
+                goalReached: '目标达成！',
+                increase: '增长',
+                revenueGrowth: '↑ 12.5% 较上月',
+                usersGrowth: '↑ 8.2% 较上月',
+
+                // Trusted By
+                trustedBy: '全球领先企业信赖之选',
+
+                // Features
+                featuresTitle: '您成功所需的一切',
+                featuresDesc: '强大的功能设计，帮助您充满信心地理解、分析并基于数据采取行动。',
+                feature1Title: '实时分析',
+                feature1Desc: '通过实时数据流和所有仪表板的即时更新，实时监控您的指标。',
+                feature2Title: 'AI驱动的洞察',
+                feature2Desc: '让我们的智能算法发现隐藏模式，并在趋势发生之前进行预测。',
+                feature3Title: '自定义仪表板',
+                feature3Desc: '使用我们的拖放式构建器创建精美的可视化效果。无需编码。',
+                feature4Title: '自动化报告',
+                feature4Desc: '安排精美的PDF和Excel报告自动发送到您的收件箱。',
+                feature5Title: '企业级安全',
+                feature5Desc: '银行级加密、单点登录，符合SOC 2、GDPR和HIPAA标准。',
+                feature6Title: '200+ 集成',
+                feature6Desc: '连接您喜爱的所有工具，包括Salesforce、HubSpot、Google Analytics等。',
+
+                // Pricing
+                pricingTitle: '简单透明的价格',
+                pricingDesc: '选择适合您需求的计划。所有计划均包含14天免费试用。',
+                planStarter: '入门版',
+                planStarterDesc: '适合刚刚起步的小型团队',
+                planPro: '专业版',
+                planProDesc: '适合需要更多功能的成长型团队',
+                planEnterprise: '企业版',
+                planEnterpriseDesc: '适合有定制需求的大型组织',
+                mostPopular: '最受欢迎',
+                perMonth: '/月',
+                custom: '定制',
+                starter1: '最多5名团队成员',
+                starter2: '10个仪表板',
+                starter3: '基础分析功能',
+                starter4: '邮件支持',
+                pro1: '最多20名团队成员',
+                pro2: '无限仪表板',
+                pro3: '高级分析 + AI',
+                pro4: '优先支持',
+                pro5: '50+ 集成',
+                enterprise1: '无限团队成员',
+                enterprise2: '全方位定制',
+                enterprise3: '专属成功经理',
+                enterprise4: '24/7 电话支持',
+                enterprise5: 'SLA 保证',
+                ctaGetStarted: '开始使用',
+                ctaContactSales: '联系销售',
+
+                // Testimonials
+                testimonialsTitle: '全球团队信赖之选',
+                testimonialsDesc: '了解客户对使用 DataFlow Pro 的体验有何评价。',
+                testimonial1: '"DataFlow Pro 彻底改变了我们的决策方式。实时分析帮助我们在短短3个月内将转化率提高了40%。绝对颠覆性！"',
+                testimonial1Name: '金莎拉',
+                testimonial1Role: '增长总监，科技公司',
+                testimonial2: '"AI驱动的洞察令人难以置信。就像团队中有一名数据科学家7x24小时待命。我们节省了无数时间，发现了从未知晓的机会。"',
+                testimonial2Name: '迈克尔·约翰逊',
+                testimonial2Role: 'CEO，创业XYZ',
+                testimonial3: '"我们用过最好的分析平台。仪表板精美，集成功能完美运作，支持团队响应迅速。强烈推荐！"',
+                testimonial3Name: '陈艾米丽',
+                testimonial3Role: '数据主管，企业公司',
+
+                // CTA
+                ctaTitle: '准备好转化您的数据了吗？',
+                ctaDesc: '加入 10,000+ 已使用 DataFlow Pro 做出更明智决策的团队。今天开始您的免费试用。',
+                ctaButton1: '开始免费试用',
+                ctaButton2: '预约演示',
+                ctaNote: '无需信用卡 • 14天免费试用 • 随时取消',
+
+                // Footer
+                footerDesc: '通过实时分析和AI驱动的仪表板，将您的数据转化为可操作的洞察。',
+                footerProduct: '产品',
+                footerFeatures: '功能特点',
+                footerPricing: '价格方案',
+                footerIntegrations: '集成',
+                footerChangelog: '更新日志',
+                footerCompany: '公司',
+                footerAbout: '关于我们',
+                footerBlog: '博客',
+                footerCareers: '招聘',
+                footerContact: '联系我们',
+                footerLegal: '法律',
+                footerPrivacy: '隐私政策',
+                footerTerms: '服务条款',
+                footerCookie: 'Cookie政策',
+                footerSecurity: '安全',
+                footerCopyright: '© 2025 DataFlow Pro. 版权所有。'
+            },
+            en: {
+                // Navigation
+                signIn: 'Sign In',
+                getStarted: 'Get Started Free',
+                features: 'Features',
+                pricing: 'Pricing',
+                testimonials: 'Testimonials',
+                documentation: 'Documentation',
+
+                // Hero Section
+                heroBadge: 'Real-time Analytics Platform',
+                heroTitle: 'Transform Data Into',
+                heroHighlight: 'Actionable Insights',
+                heroDesc: 'Unlock the power of your data with beautiful dashboards, real-time visualizations, and AI-powered analytics. Make smarter decisions, faster.',
+                heroCta1: 'Start Free Trial',
+                heroCta2: 'Watch Demo',
+                trustBadges: 'teams',
+                rating: 'rating',
+
+                // Dashboard
+                liveDashboard: 'Live Dashboard',
+                revenue: 'Revenue',
+                users: 'Users',
+                trafficOverview: 'Traffic Overview',
+                organic: 'Organic',
+                paid: 'Paid',
+                updating: 'Updating in real-time',
+                goalReached: 'Goal Reached!',
+                increase: 'increase',
+                revenueGrowth: '↑ 12.5% vs last month',
+                usersGrowth: '↑ 8.2% vs last month',
+
+                // Trusted By
+                trustedBy: 'TRUSTED BY LEADING COMPANIES WORLDWIDE',
+
+                // Features
+                featuresTitle: 'Everything You Need to Succeed',
+                featuresDesc: 'Powerful features designed to help you understand, analyze, and act on your data with confidence.',
+                feature1Title: 'Real-time Analytics',
+                feature1Desc: 'Monitor your metrics as they happen with live data streaming and instant updates across all your dashboards.',
+                feature2Title: 'AI-Powered Insights',
+                feature2Desc: 'Let our intelligent algorithms surface hidden patterns and predict trends before they happen.',
+                feature3Title: 'Custom Dashboards',
+                feature3Desc: 'Build stunning visualizations with our drag-and-drop builder. No coding required.',
+                feature4Title: 'Automated Reports',
+                feature4Desc: 'Schedule beautiful PDF and Excel reports to be delivered to your inbox automatically.',
+                feature5Title: 'Enterprise Security',
+                feature5Desc: 'Bank-level encryption, SSO, and compliance with SOC 2, GDPR, and HIPAA standards.',
+                feature6Title: '200+ Integrations',
+                feature6Desc: 'Connect with all your favorite tools including Salesforce, HubSpot, Google Analytics, and more.',
+
+                // Pricing
+                pricingTitle: 'Simple, Transparent Pricing',
+                pricingDesc: 'Choose the plan that fits your needs. All plans include a 14-day free trial.',
+                planStarter: 'Starter',
+                planStarterDesc: 'Perfect for small teams getting started',
+                planPro: 'Professional',
+                planProDesc: 'For growing teams that need more power',
+                planEnterprise: 'Enterprise',
+                planEnterpriseDesc: 'For large organizations with custom needs',
+                mostPopular: 'MOST POPULAR',
+                perMonth: '/month',
+                custom: 'Custom',
+                starter1: 'Up to 5 team members',
+                starter2: '10 dashboards',
+                starter3: 'Basic analytics',
+                starter4: 'Email support',
+                pro1: 'Up to 20 team members',
+                pro2: 'Unlimited dashboards',
+                pro3: 'Advanced analytics + AI',
+                pro4: 'Priority support',
+                pro5: '50+ integrations',
+                enterprise1: 'Unlimited team members',
+                enterprise2: 'Custom everything',
+                enterprise3: 'Dedicated success manager',
+                enterprise4: '24/7 phone support',
+                enterprise5: 'SLA guarantee',
+                ctaGetStarted: 'Get Started',
+                ctaContactSales: 'Contact Sales',
+
+                // Testimonials
+                testimonialsTitle: 'Loved by Teams Worldwide',
+                testimonialsDesc: 'See what our customers have to say about their experience with DataFlow Pro.',
+                testimonial1: '"DataFlow Pro transformed how we make decisions. The real-time analytics helped us increase conversion by 40% in just 3 months. Absolutely game-changing!"',
+                testimonial1Name: 'Sarah Kim',
+                testimonial1Role: 'Head of Growth, TechCorp',
+                testimonial2: '"The AI-powered insights are incredible. It\'s like having a data scientist on the team 24/7. We\'ve saved countless hours and discovered opportunities we never knew existed."',
+                testimonial2Name: 'Michael Johnson',
+                testimonial2Role: 'CEO, StartupXYZ',
+                testimonial3: '"Best analytics platform we\'ve used. The dashboards are beautiful, the integrations work flawlessly, and the support team is incredibly responsive. Highly recommend!"',
+                testimonial3Name: 'Emily Chen',
+                testimonial3Role: 'Data Lead, Enterprise Inc',
+
+                // CTA
+                ctaTitle: 'Ready to Transform Your Data?',
+                ctaDesc: 'Join 10,000+ teams already using DataFlow Pro to make smarter decisions. Start your free trial today.',
+                ctaButton1: 'Start Free Trial',
+                ctaButton2: 'Schedule Demo',
+                ctaNote: 'No credit card required • 14-day free trial • Cancel anytime',
+
+                // Footer
+                footerDesc: 'Transform your data into actionable insights with real-time analytics and AI-powered dashboards.',
+                footerProduct: 'Product',
+                footerFeatures: 'Features',
+                footerPricing: 'Pricing',
+                footerIntegrations: 'Integrations',
+                footerChangelog: 'Changelog',
+                footerCompany: 'Company',
+                footerAbout: 'About',
+                footerBlog: 'Blog',
+                footerCareers: 'Careers',
+                footerContact: 'Contact',
+                footerLegal: 'Legal',
+                footerPrivacy: 'Privacy Policy',
+                footerTerms: 'Terms of Service',
+                footerCookie: 'Cookie Policy',
+                footerSecurity: 'Security',
+                footerCopyright: '© 2025 DataFlow Pro. All rights reserved.'
+            }
+        };
+
+        let currentLang = 'zh';
+
+        // Load saved language preference
+        function loadLanguagePreference() {
+            const saved = localStorage.getItem('preferredLanguage');
+            if (saved) {
+                currentLang = saved;
+                updateLanguage(currentLang);
+            }
+        }
+
+        // Toggle language
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('preferredLanguage', currentLang);
+            updateLanguage(currentLang);
+        }
+
+        // Update all text content
+        function updateLanguage(lang) {
+            const t = translations[lang];
+
+            // Update language switcher appearance
+            document.getElementById('lang-zh').classList.toggle('active', lang === 'zh');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+
+            // Update page title
+            document.title = lang === 'zh'
+                ? 'DataFlow Pro - 实时数据分析仪表板'
+                : 'DataFlow Pro - Real-time Analytics Dashboard';
+
+            // Update meta description
+            const metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) {
+                metaDesc.content = lang === 'zh'
+                    ? '使用 DataFlow Pro 将您的数据转化为可操作的洞察。实时分析、精美的可视化和强大的报告功能。'
+                    : 'Transform your data into actionable insights with DataFlow Pro. Real-time analytics, beautiful visualizations, and powerful reporting.';
+            }
+
+            // Update all elements with data-lang attribute
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (t[key]) {
+                    el.textContent = t[key];
+                }
+            });
+
+            // Update navigation menu
+            updateElement('.nav-features', t.features);
+            updateElement('.nav-pricing', t.pricing);
+            updateElement('.nav-testimonials', t.testimonials);
+            updateElement('.nav-documentation', t.documentation);
+
+            // Update specific elements
+            updateElement('.hero-badge', t.heroBadge);
+            updateElement('.hero-title', t.heroTitle);
+            updateElement('.hero-highlight', t.heroHighlight);
+            updateElement('.hero-desc', t.heroDesc);
+            updateElement('.hero-cta1', t.heroCta1);
+            updateElement('.hero-cta2', t.heroCta2);
+            updateElement('.trust-badges', t.trustBadges);
+            updateElement('.rating', t.rating);
+            updateElement('.live-dashboard', t.liveDashboard);
+            updateElement('.revenue', t.revenue);
+            updateElement('.users', t.users);
+            updateElement('.traffic-overview', t.trafficOverview);
+            updateElement('.organic', t.organic);
+            updateElement('.paid', t.paid);
+            updateElement('.updating', t.updating);
+            updateElement('.goal-reached', t.goalReached);
+            updateElement('.increase', t.increase);
+            updateElement('.revenue-growth', t.revenueGrowth);
+            updateElement('.users-growth', t.usersGrowth);
+            updateElement('.trusted-by', t.trustedBy);
+
+            // Update features section
+            updateElement('.features-title', t.featuresTitle);
+            updateElement('.features-desc', t.featuresDesc);
+
+            // Update features
+            for (let i = 1; i <= 6; i++) {
+                updateElement(`.feature${i}-title`, t[`feature${i}Title`]);
+                updateElement(`.feature${i}-desc`, t[`feature${i}Desc`]);
+            }
+
+            // Update pricing section
+            updateElement('.pricing-title', t.pricingTitle);
+            updateElement('.pricing-desc', t.pricingDesc);
+            updateElement('.plan-starter', t.planStarter);
+            updateElement('.plan-starter-desc', t.planStarterDesc);
+            updateElement('.plan-pro', t.planPro);
+            updateElement('.plan-pro-desc', t.planProDesc);
+            updateElement('.plan-enterprise', t.planEnterprise);
+            updateElement('.plan-enterprise-desc', t.planEnterpriseDesc);
+            updateElement('.most-popular', t.mostPopular);
+            updateElement('.per-month', t.perMonth);
+            updateElement('.plan-custom', t.custom);
+
+            // Update pricing features
+            for (let i = 1; i <= 5; i++) {
+                updateElement(`.starter${i}`, t[`starter${i}`]);
+                updateElement(`.pro${i}`, t[`pro${i}`]);
+                updateElement(`.enterprise${i}`, t[`enterprise${i}`]);
+            }
+
+            // Update CTA buttons
+            updateElement('.cta-get-started', t.ctaGetStarted);
+            updateElement('.cta-contact-sales', t.ctaContactSales);
+
+            // Update testimonials
+            updateElement('.testimonials-title', t.testimonialsTitle);
+            updateElement('.testimonials-desc', t.testimonialsDesc);
+            updateElement('.testimonial1', t.testimonial1);
+            updateElement('.testimonial1-name', t.testimonial1Name);
+            updateElement('.testimonial1-role', t.testimonial1Role);
+            updateElement('.testimonial2', t.testimonial2);
+            updateElement('.testimonial2-name', t.testimonial2Name);
+            updateElement('.testimonial2-role', t.testimonial2Role);
+            updateElement('.testimonial3', t.testimonial3);
+            updateElement('.testimonial3-name', t.testimonial3Name);
+            updateElement('.testimonial3-role', t.testimonial3Role);
+
+            // Update CTA
+            updateElement('.cta-title', t.ctaTitle);
+            updateElement('.cta-desc', t.ctaDesc);
+            updateElement('.cta-button1', t.ctaButton1);
+            updateElement('.cta-button2', t.ctaButton2);
+            updateElement('.cta-note', t.ctaNote);
+
+            // Update footer
+            updateElement('.footer-desc', t.footerDesc);
+            updateElement('.footer-product', t.footerProduct);
+            updateElement('.footer-features', t.footerFeatures);
+            updateElement('.footer-pricing', t.footerPricing);
+            updateElement('.footer-integrations', t.footerIntegrations);
+            updateElement('.footer-changelog', t.footerChangelog);
+            updateElement('.footer-company', t.footerCompany);
+            updateElement('.footer-about', t.footerAbout);
+            updateElement('.footer-blog', t.footerBlog);
+            updateElement('.footer-careers', t.footerCareers);
+            updateElement('.footer-contact', t.footerContact);
+            updateElement('.footer-legal', t.footerLegal);
+            updateElement('.footer-privacy', t.footerPrivacy);
+            updateElement('.footer-terms', t.footerTerms);
+            updateElement('.footer-cookie', t.footerCookie);
+            updateElement('.footer-security', t.footerSecurity);
+            updateElement('.footer-copyright', t.footerCopyright);
+        }
+
+        function updateElement(selector, text) {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+                el.textContent = text;
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadLanguagePreference);
+    </script>
+
+</body>
+</html>
