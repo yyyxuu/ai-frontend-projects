@@ -21,14 +21,15 @@ export function Sidebar({ isOpen, activeTab, setActiveTab }) {
         transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:z-auto
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        flex flex-col
       `}>
         {/* Logo */}
-        <div className="h-16 flex items-center px-6 border-b border-border">
+        <div className="h-16 flex items-center px-6 border-b border-border flex-shrink-0">
           <span className="text-xl font-bold text-primary">物流园</span>
         </div>
         
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        {/* Navigation - scrollable if needed */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -47,8 +48,8 @@ export function Sidebar({ isOpen, activeTab, setActiveTab }) {
           ))}
         </nav>
         
-        {/* Quick stats */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+        {/* Quick stats - static positioning */}
+        <div className="flex-shrink-0 p-4 border-t border-border">
           <div className="bg-secondary rounded-lg p-4">
             <div className="text-xs text-muted-foreground mb-2">今日概况</div>
             <div className="space-y-2">
