@@ -6,20 +6,32 @@ function EfficiencyGauge({ value, label, color }) {
   
   return (
     <div className="flex flex-col items-center">
-      <div className="w-24 h-24 relative">
+      <div className="w-28 h-28 relative">
         <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart innerRadius="60%" outerRadius="100%" barSize={12} data={data} startAngle={90} endAngle={-270}>
-            <RadialBar background dataKey="value" cornerRadius={6} />
+          <RadialBarChart 
+            innerRadius="70%" 
+            outerRadius="100%" 
+            barSize={14} 
+            data={data} 
+            startAngle={90} 
+            endAngle={-270}
+          >
+            <RadialBar 
+              background={{ fill: 'oklch(0.92 0 0)' }} 
+              dataKey="value" 
+              cornerRadius={10}
+            />
           </RadialBarChart>
         </ResponsiveContainer>
+        {/* Centered percentage text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-xl font-bold text-foreground">{value}</div>
-            <div className="text-xs text-muted-foreground">%</div>
+          <div className="text-center -mt-1">
+            <div className="text-2xl font-bold text-foreground leading-none">{value}</div>
+            <div className="text-xs text-muted-foreground font-medium mt-0.5">%</div>
           </div>
         </div>
       </div>
-      <div className="mt-2 text-sm font-medium text-foreground">{label}</div>
+      <div className="mt-3 text-sm font-medium text-foreground">{label}</div>
     </div>
   );
 }
