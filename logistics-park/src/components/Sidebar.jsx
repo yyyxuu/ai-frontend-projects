@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 const navItems = [
   { id: 'dashboard', name: '数据看板', icon: '📊' },
   { id: 'warehouse', name: '仓库管理', icon: '🏭' },
