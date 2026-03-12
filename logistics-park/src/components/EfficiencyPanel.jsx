@@ -1,37 +1,52 @@
-import { RadialBarChart, RadialBar, ResponsiveContainer } from 'recharts';
 import { efficiencyData } from '../data/mockData';
 
+// 计算环形进度条的 stroke-dasharray
+function getProgressStroke(value, radius) {
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (value / 100) * circumference;
+  return { circumference, offset };
+}
+
 function EfficiencyGauge({ value, label, color }) {
-  const data = [{ name: label, uv: value, pv: 100, fill: color }];
+  const size = 120;
+  const strokeWidth = 16;
+  const radius = (size - strokeWidth) / 2;
+  const { circumference, offset } = getProgressStroke(value, radius);
+  const center = size / 2;
   
   return (
     <div className="flex flex-col items-center">
-      <div className="w-28 h-28 relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart
-            cx="50%"
-            cy="50%"
-            innerRadius="70%"
-            outerRadius="100%"
-            barSize={24}
-            data={data}
-            startAngle={90}
-            endAngle={-270}
-          >
-            {/* Background track - full circle */}
-            <RadialBar
-              background={{ fill: 'oklch(0.92 0 0)' }}
-              cornerRadius={12}
-            />
-            {/* Actual value bar - percentage based */}
-            <RadialBar
-              dataKey="uv"
-              fill={color}
-              cornerRadius={12}
-            />
-          </RadialBarChart>
-        </ResponsiveContainer>
-        {/* Perfectly centered text */}
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg
+          width={size}
+          height={size}
+          className="transform -rotate-90"
+          viewBox={`0 0 ${size} ${size}`}
+        >
+          {/* Background track */}
+          <circle
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="none"
+            stroke="oklch(0.92 0 0)"
+            strokeWidth={strokeWidth}
+          />
+          {/* Progress bar */}
+          <circle
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+          />
+        </svg>
+        {/* Centered text */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="text-3xl font-bold text-foreground leading-none tracking-tight">{value}</div>
