@@ -11,9 +11,9 @@ function EfficiencyGauge({ value, label, color }) {
           <RadialBarChart
             cx="50%"
             cy="50%"
-            innerRadius="80%"
+            innerRadius="70%"
             outerRadius="100%"
-            barSize={16}
+            barSize={24}
             data={data}
             startAngle={90}
             endAngle={-270}
@@ -21,18 +21,13 @@ function EfficiencyGauge({ value, label, color }) {
             {/* Background track - full circle */}
             <RadialBar
               background={{ fill: 'oklch(0.92 0 0)' }}
-              dataKey="pv"
-              cornerRadius={10}
-              startAngle={90}
-              endAngle={-270}
+              cornerRadius={12}
             />
             {/* Actual value bar - percentage based */}
             <RadialBar
               dataKey="uv"
               fill={color}
-              cornerRadius={10}
-              startAngle={90}
-              endAngle={-270}
+              cornerRadius={12}
             />
           </RadialBarChart>
         </ResponsiveContainer>
