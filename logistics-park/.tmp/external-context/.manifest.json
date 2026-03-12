@@ -1,0 +1,67 @@
+{
+  "lastUpdated": "2026-03-12T00:00:00Z",
+  "libraries": {
+    "recharts": {
+      "package": "recharts",
+      "officialDocs": "https://recharts.org",
+      "files": [
+        {
+          "filename": "installation-and-setup.md",
+          "topic": "Installation and Setup",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "basic-chart-types.md",
+          "topic": "Basic Chart Types (Line, Bar, Pie, Area)",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "responsive-charts.md",
+          "topic": "Responsive Charts",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "customization.md",
+          "topic": "Customization (Colors, Tooltips, Legends)",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "dashboard-examples.md",
+          "topic": "Dashboard Examples",
+          "fetched": "2026-03-12T00:00:00Z"
+        }
+      ]
+    },
+    "react-chartjs-2": {
+      "package": "react-chartjs-2",
+      "officialDocs": "https://react-chartjs-2.js.org",
+      "files": [
+        {
+          "filename": "installation-and-setup.md",
+          "topic": "Installation and Setup",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "basic-chart-types.md",
+          "topic": "Basic Chart Types (Line, Bar, Pie, Doughnut)",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "responsive-charts.md",
+          "topic": "Responsive Charts",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "customization.md",
+          "topic": "Customization (Colors, Tooltips, Legends)",
+          "fetched": "2026-03-12T00:00:00Z"
+        },
+        {
+          "filename": "dashboard-examples.md",
+          "topic": "Dashboard Examples",
+          "fetched": "2026-03-12T00:00:00Z"
+        }
+      ]
+    }
+  }
+}
