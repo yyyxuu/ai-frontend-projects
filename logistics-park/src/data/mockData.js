@@ -115,3 +115,13 @@ export const quickActions = [
   { id: 5, name: '报表生成', icon: '📋', color: 'pink' },
   { id: 6, name: '告警处理', icon: '⚠️', color: 'red' },
 ];
+
+// 图标映射（用于 QuickActions 组件）
+export const actionIcons = {
+  inbound: '📥',
+  outbound: '📤',
+  dispatch: '🚛',
+  inventory: '📊',
+  clipboard: '📋',
+  warning: '⚠️',
+};
